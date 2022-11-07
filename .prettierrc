@@ -2,6 +2,6 @@
   "singleQuote": true,
   "semi": false,
   "quoteProps": "consistent",
-  "jsxBrackets": false,
+  "jsxBracketSameLine": false,
   "singleAttributePerLine": true
 }
