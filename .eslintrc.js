@@ -26,7 +26,6 @@ module.exports = {
     'no-dupe-args': ['error'],
     'no-dupe-keys': ['error'],
     'no-unreachable': ['error'],
-    'curly': [],
   },
   ignorePatterns: [],
 }
