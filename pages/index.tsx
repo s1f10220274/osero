@@ -116,6 +116,7 @@ const Logo = styled.span`
 
 const HomePage: NextPage = () => {
   let a = 1
+
   console.log(a)
   if (a === 1) {
     for (let b = 1; b < 10; b += 1) {

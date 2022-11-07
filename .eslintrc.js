@@ -9,21 +9,11 @@ module.exports = {
   extends: [
     'plugin:react/recommended',
     'standard-with-typescript',
-    'prettier',
     'standard',
     'eslint:recommended',
     //↓は↑より後に記述しなければならない。後に書いた方が優先だから
     'plugin:@typescript-eslint/recommended',
-    {
-      /*} 'no-dupe-args',
-    'no-dupe-keys',
-
-    'no-extra-semi',
-    'no-irregular-whitespace',
-    'no-unreachable',
-    'curly',
-  'all',*/
-    },
+    'prettier',
   ],
   overrides: [],
   parserOptions: {
@@ -31,7 +21,12 @@ module.exports = {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
-  plugins: ['@typescript-eslint', 'react'],
-  rules: { curly: ALL },
+  plugins: ['@typescript-eslint', 'react', '@typescript-eslint/recommended'],
+  rules: {
+    'no-dupe-args': ['error'],
+    'no-dupe-keys': ['error'],
+    'no-unreachable': ['error'],
+    'curly': [],
+  },
   ignorePatterns: [],
 }
