@@ -27,10 +27,9 @@ module.exports = {
     },
   },
   ecmaFeatures: {
-    impliedStrict: true,
+    impliedStrict: true, //常にStrictMode
   },
   rules: {
-    'react/react-in-jsx-scope': 'off',
     'react/prop-types': 'off',
     'react/self-closing-comp': 'error',
     'react-hooks/rules-of-hooks': 'error',
@@ -41,6 +40,5 @@ module.exports = {
     'no-dupe-args': ['error'],
     'no-dupe-keys': ['error'],
     'no-unreachable': ['error'],
-    //'brace-style': ['error', 'allman', { allowSingleLine: true }],
   },
 }
