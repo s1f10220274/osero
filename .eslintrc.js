@@ -37,8 +37,6 @@ module.exports = {
     'prefer-template': 'error',
     '@typescript-eslint/consistent-type-imports': 'error',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
-    'no-dupe-args': ['error'],
-    'no-dupe-keys': ['error'],
-    'no-unreachable': ['error'],
+    'no-unreachable': ['error'], //到達できないコードはエラー
   },
 }
