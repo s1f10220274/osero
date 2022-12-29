@@ -69,6 +69,7 @@ const Griditem = styled.div`
 
 const Frame = styled.div`
   margin: auto;
+  position: absolute;
   width: 400px;
   height: 400px;
   border: 8px #000000;
@@ -91,7 +92,8 @@ const CPU = styled.div`
   background-color: #000000;
 `
 const Restart = styled.button`
-  display: flex;
+  position: absolute;
+  top: 10%;
   text-align: center;
   font-size: 1.2rem;
   border-radius: 10px;
@@ -100,7 +102,6 @@ const Restart = styled.button`
 const Rock = styled.div`
   position: absolute;
   margin: auto;
-  top: 120px;
   width: 400px;
   height: 400px;
   border: 8px #000000;
@@ -363,7 +364,6 @@ const HomePage: NextPage = () => {
             setBoard(initialval)
             setRocking(false)
           }}>Restart</Restart>
-        {rocking === true && <Rock></Rock>}
         <Frame>
             {board.map((row, y) => (
               <Grid key = {y}>
@@ -376,6 +376,7 @@ const HomePage: NextPage = () => {
               </Grid>
             ))}
         </Frame>
+        {rocking === true && <Rock></Rock>}
       </Main>
     </Container>
   )
