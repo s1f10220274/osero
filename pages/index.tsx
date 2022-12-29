@@ -3,6 +3,7 @@ import Head from 'next/head'
 import React from 'react'
 import styled from 'styled-components'
 import { Box, chakra } from '@chakra-ui/react'
+import {useState } from "react"
 
 const Container = styled.div`
   display: flex;
@@ -55,16 +56,56 @@ const Code = styled.code<{ bgColor: string }>`
 `
 
 const Grid = styled.div`
+  display: grid;
+  place-items: auto;
+  grid-template-columns: repeat(8, 50px);
+  grid-template-rows: repeat(1, 50px);
+`
+
+const Griditem = styled.div`
+  padding: 3px;
+  border: 1px solid #eaeaea;
+`
+
+const Frame = styled.div`
+  margin: auto;
+  width: 400px;
+  height: 400px;
+  border: 8px #000000;
+  background-color: #19542a;
+`
+
+const Player = styled.div`
+  margin: auto;
+  width: 100%;
+  height: 100%;
+  border-radius: 30px;
+  background-color: #ffffff;
+`
+
+const CPU = styled.div`
+  margin: auto;
+  width: 100%;
+  height: 100%;
+  border-radius: 30px;
+  background-color: #000000;
+`
+const Restart = styled.button`
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  max-width: 800px;
-  margin-top: 3rem;
-  @media (max-width: 600px) {
-    flex-direction: column;
-    width: 100%;
-  }
+  text-align: center;
+  font-size: 1.2rem;
+  border-radius: 10px;
+`
+
+const Rock = styled.div`
+  position: absolute;
+  margin: auto;
+  top: 120px;
+  width: 400px;
+  height: 400px;
+  border: 8px #000000;
+  background-color: #2e2e2e;
+  opacity: 0.5;
 `
 
 const Card = styled.a`
@@ -115,13 +156,202 @@ const Logo = styled.span`
 `
 
 const HomePage: NextPage = () => {
+
+  //ボードを作る、0が何もない、 1がプレイヤーの白、2がNPCの黒
+  //置けるグリッドの判定、同色の場所から見回し、突き当りまで足していき、反対色しか並んでない場所に設置可能
+  //置いたとき、自分から見回し、突き当りまで足していき、同色があった場合ひっくり返す
+
+  const initialval = [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 2, 0, 0, 0],
+    [0, 0, 0, 2, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0]
+  ]
+
+  const [board, setBoard] = useState (initialval)
+
+  const [rocking, setRocking] = useState(false)
+
+  const [debug, setDebug] = useState("debug")
+
+  /*const lookaround = (y: number, x: number) => {
+    const newBoard: number[][] = JSON.parse(JSON.stringify(board))
+    const direction: number[][] = [[1,0], [1,-1], [0,-1], [-1,-1], [-1,0], [-1,1], [0,1], [1,1]]
+    const newdirection: number[][] = direction.filter((elem, ind) => {
+      direction.map((content,index) => {//見回したい。indexを抽出してcontent[index]+0か1か2かの配列で返す
+        if(newBoard[x+direction[index][0]][y+direction[index][1]] === 0){
+          return [content[0], content[1], 0]
+        }else if(newBoard[x+direction[index][0]][y+direction[index][1]] === 1){
+          return [content[0], content[1], 1]
+        }else if(newBoard[x+direction[index][0]][y+direction[index][1]] === 2){
+          return [content[0], content[1], 2]
+        }
+      })
+      return newBoard[x+direction[ind][0]][y+direction[ind][1]] === 1 || newBoard[x+direction[ind][0]][y+direction[ind][1]] === 0
+    })
+    return newdirection
+  }*/
+
+  const colorpicker = (y: number, x: number, direc: number[]) => {
+    const newBoard: number[][] = JSON.parse(JSON.stringify(board))
+
+    if (0 <= y + direc[0] && y + direc[0] <= 7 && 0 <= x + direc[1] && x + direc[1] <= 7) {
+      if (newBoard[y+direc[0]][x+direc[1]] == 0) {
+        return null
+      }else if (newBoard[y][x] == newBoard[y+direc[0]][x+direc[1]]) {
+        return true
+      }else{
+        return false
+      }
+    }else {
+      return null
+    }
+  }
+
+  const putjudge = (y:number, x: number, direc:number[], color:number) => {
+    const newBoard: number[][] = JSON.parse(JSON.stringify(board))
+    newBoard[y][x] = color
+    if (0 <= y + direc[0] && y + direc[0] <= 7 && 0 <= x + direc[1] && x + direc[1] <= 7) {
+      if (newBoard[y+direc[0]][x+direc[1]] == 0) {
+        return null
+      }else if (newBoard[y][x] == newBoard[y+direc[0]][x+direc[1]]) {
+        return true
+      }else{
+        return false
+      }
+    }else {
+      return null
+    }
+  }
+
+  const reversejudge = (y: number, x: number, color:number, board:number[][]) => {
+    const direction: number[][] = [[1,0], [1,-1], [0,-1], [-1,-1], [-1,0], [-1,1], [0,1], [1,1]]
+    let result: number[][] = []
+    if (board[y][x] === 0) {
+      for (const direc of direction) {
+        if (putjudge(y, x, direc, color) === false) {
+          let temp = []
+          temp.push([y+direc[0], x+direc[1]])
+          let newy = y+direc[0]
+          let newx = x+direc[1]
+          while (colorpicker(newy, newx, direc) === true) {
+            temp.push([newy+direc[0], newx+direc[1]])
+            newy = newy + direc[0]
+            newx = newx + direc[1]
+          }
+          if (colorpicker(newy, newx, direc) === false) {
+            temp.map(content => result.push(content))
+          }
+        }
+      }
+    }
+    const newresult: number[][] = reverse(result, board)
+    if (JSON.stringify(board) != JSON.stringify(newresult)) {
+      newresult[y][x] = color
+    }
+    
+    return newresult
+  }
+
+  const reverse = (array: number[][], board: number[][]) => {//ひっくり返す
+    const newBoard: number[][] = JSON.parse(JSON.stringify(board))
+    array.map((content, index) => {
+      newBoard[content[0]][content[1]] = newBoard[content[0]][content[1]] == 1 ? 2 : 1
+    })
+    return newBoard
+  }
+
+  const ableput = (color:number, board:number[][]) => {//newBoardから置ける場所を抽出する
+    const direction: number[][] = [[1,0], [1,-1], [0,-1], [-1,-1], [-1,0], [-1,1], [0,1], [1,1]]
+    let mycolor : number[][] = []
+    board.map((y, ydex) => {y.map((x, xdex) => x === color && mycolor.push([ydex, xdex]))})
+    
+    let result: number[][] = []
+    for (const array of mycolor) {
+      const [y,x] = array
+      for (const direc of direction) {
+        if (colorpicker(y, x, direc) === false) {
+          let temp = []
+          temp.push([y+direc[0], x+direc[1]])
+          let newy = y+direc[0]
+          let newx = x+direc[1]
+          while (colorpicker(newy, newx, direc) === true) {
+            temp.push([newy+direc[0], newx+direc[1]])
+            newy = newy + direc[0]
+            newx = newx + direc[1]
+          }
+          if (colorpicker(newy, newx, direc) === null) {
+            if (0 <= newy + direc[0] && newy + direc[0] <= 7 && 0 <= newx + direc[1] && newx + direc[1] <= 7) {
+              result.push([newy + direc[0], newx + direc[1]])
+            } 
+          }
+        }
+      }
+    }
+    return result
+    //return number[][]型のおける場所絶対座標
+  }
+
+  const getRandom = (array:number[][]) => {
+    const max :number = array.length-1
+    return array[Math.floor(Math.random() * max)]
+  }
+
+  const cpumove = (color:number, board:number[][]) => {
+    const pickup :number[] = getRandom(ableput(color, board))
+    if (pickup == undefined) {
+      setRocking(false)
+      return board
+    }
+    setRocking(false)
+    const [y,x] = pickup
+    const result : number[][] = reversejudge(y, x, color, board)
+    return result
+  }
+
+  const playermove = (y: number, x: number, color:number, board:number[][]) => {
+    setRocking(true)
+    return reversejudge(y, x, color, board)
+  }
+
+  const push = (y: number, x: number, color:number) => {
+    const newBoard: number[][] = JSON.parse(JSON.stringify(board))
+    if (JSON.stringify(reversejudge(y, x, color, board)) != JSON.stringify(newBoard)) {
+      const turnBoard: number[][] = playermove(y, x, color, newBoard)
+      setBoard(turnBoard)
+      setTimeout(() => {
+        setBoard(cpumove(color===1?2:1, turnBoard))
+      }, 2000)
+    }
+  }
+
+  /*const turn = async (color:number) => {
+    await new Promise(resolve => setTimeout(resolve, 3000))
+    await setRocking(false)
+    return cpumove(color===1?2:1, board)
+  }*/
+
+  /*const turntest = (y: number, x: number, color:number) => {
+    setDebug("testing")
+    setBoard(reversejudge(y, x, color, board))
+    const newcolor :number = color===1?2:1
+    const pickup :number[] = getRandom(ableput(newcolor, board))
+    setDebug(JSON.stringify(pickup))
+    const [newy,newx] = pickup
+    return reversejudge(newy, newx, newcolor, board)
+  }*/
+
   return (
     <Container>
       <Head>
-        <title>Create Next App</title>
+        <title>Sample</title>
         <meta
-          name="description"
-          content="Generated by create next app"
+          name="Sample"
+          content="Sample"
         />
         <link
           rel="icon"
@@ -129,58 +359,24 @@ const HomePage: NextPage = () => {
         />
       </Head>
       <Main>
-        <Title>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </Title>
-
-        <Description>
-          Get started by editing <Code bgColor="#fafafa">pages/index.js</Code>
-        </Description>
-
-        <Grid>
-          <Card href="https://nextjs.org/docs">
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </Card>
-
-          <Card href="https://nextjs.org/learn">
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </Card>
-
-          <Card href="https://github.com/vercel/next.js/tree/master/examples">
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </Card>
-
-          <Card href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app">
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </Card>
-        </Grid>
-        <Box>
-          <chakra.h2 color="tomato">This is chakra-ui</chakra.h2>
-        </Box>
+        <Restart onClick={() => {
+            setBoard(initialval)
+            setRocking(false)
+          }}>Restart</Restart>
+        {rocking === true && <Rock></Rock>}
+        <Frame>
+            {board.map((row, y) => (
+              <Grid key = {y}>
+                {row.map((color, x) => (
+                  <Griditem key={x} onClick={() => {push(y,x,1)}}>
+                    {color === 1 && <Player></Player>}
+                    {color === 2 && <CPU></CPU>}
+                  </Griditem>
+                ))}
+              </Grid>
+            ))}
+        </Frame>
       </Main>
-      <Footer>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <Logo>
-            <img
-              src="vercel.svg"
-              alt="Vercel Logo"
-              width={72}
-              height={16}
-            />
-          </Logo>
-        </a>
-      </Footer>
     </Container>
   )
 }
